@@ -41,7 +41,7 @@ export default function WhyPage() {
           <h2 className="text-lg font-semibold">Why Gemini</h2>
           <p className="mt-2 text-sm leading-relaxed text-slate-300">
             Gemini&apos;s prediction markets are regulated and expose market data, trade history, settlements and order placement through
-            public APIs. We use all four: forecast, report card, and protection orders.
+            public APIs. We use all four: market data for the forecast, trade history and settlements for the report card, and order placement for protection.
           </p>
         </Card>
       </div>

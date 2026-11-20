@@ -81,7 +81,7 @@ export default function ReportCard({ confidence }: { confidence: number }) {
                   <Tooltip contentStyle={{ background: "#0A0710", border: "1px solid #334155" }} formatter={(v: any, name: any) => [usd(Number(v)), name]} />
                   <Line dataKey="upper" name="Range top" stroke="#64748b" strokeDasharray="4 4" dot={false} isAnimationActive={false} />
                   <Line dataKey="median" name="Crowd median" stroke="#A78BFA" strokeWidth={2} isAnimationActive={false} />
-                  <Line dataKey="lower" name="Range bottom" stroke="#060707ff" strokeDasharray="4 4" dot={false} isAnimationActive={false} />
+                  <Line dataKey="lower" name="Range bottom" stroke="#64748b" strokeDasharray="4 4" dot={false} isAnimationActive={false} />
                   <Line
                     dataKey="settlement" name="Actual settlement" stroke="transparent" isAnimationActive={false}
                     dot={(p: any) => (
