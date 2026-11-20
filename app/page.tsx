@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { PageIntro, HowTo, DataGate, Headline, Card, ForecastChart, ConfidenceSlider, Stats } from "@/components/ui";
 

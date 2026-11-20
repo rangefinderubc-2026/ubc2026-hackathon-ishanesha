@@ -1,3 +1,5 @@
+"use client";
+
 import { PageIntro, HowTo, ReportSection } from "@/components/ui";
 
 export default function ReportPage() {

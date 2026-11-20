@@ -1,3 +1,5 @@
+"use client";
+
 import { PageIntro, HowTo, DataGate, CurrentRange, ActionsPanel, ActivityLog } from "@/components/ui";
 
 export default function ActionsPage() {
