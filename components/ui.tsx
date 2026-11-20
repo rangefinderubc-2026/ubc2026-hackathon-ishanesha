@@ -9,6 +9,7 @@ import {
   ReferenceArea, ReferenceLine, ResponsiveContainer,
 } from "recharts";
 import ReportCard from "./ReportCard";
+import ReplayCard from "./ReplayCard";
 import PixelGlasses from "./PixelGlasses";
 import { spreadPct, moodFor, MOOD_COLOR, MOOD_TEXT } from "./mood";
 import { useRange, usd, pct, clock, USE_MOCKS, MOCK_PROTECT, POLL_MS, MIN_GAP_MS, MAX_PER_HOUR, HEDGE_BUDGET_PER_HOUR } from "./RangeProvider";
@@ -361,6 +362,11 @@ export function TimelineChart() {
       )}
     </Card>
   );
+}
+
+export function ReplaySection() {
+  const { confidence } = useRange();
+  return <ReplayCard confidence={confidence} />;
 }
 
 export function ReportSection() {
