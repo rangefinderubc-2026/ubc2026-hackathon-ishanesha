@@ -2,7 +2,7 @@
 
 **Liquidity ranges from what the market expects, not what already happened.**
 
-Rangefinder turns Gemini's live BTC prediction-market ladder into a probability forecast, recommends the price range a Uniswap v3 liquidity provider should use (no Uniswap integration yet), records every decision onchain, rebalances automatically when the crowd moves, hedges on Gemini, and checks how trustworthy the crowd has been.
+Rangefinder turns Gemini's live BTC prediction-market ladder into a probability forecast, recommends the price range for a Uniswap v3 liquidity-style provider should use, records every decision onchain, rebalances automatically when the crowd moves, hedges on Gemini, and checks how trustworthy the crowd has been.
 
 - **Track:** DeFi & Onchain Applications
 - **Bounty:** Gemini Prediction Markets
