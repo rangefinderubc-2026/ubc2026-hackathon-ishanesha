@@ -37,12 +37,12 @@ export default function ReportCard({ confidence }: { confidence: number }) {
   const resultText = (r: string) => (r === "inside" ? "✓ Inside" : r === "below" ? "✗ Below" : "✗ Above");
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-[#121933] p-5">
+    <section className="rounded-2xl border border-white/10 bg-[#151022] p-5">
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold">Crowd report card</h3>
         <label className="flex items-center gap-2 text-xs text-slate-400">
           Forecast taken
-          <select value={hours} onChange={(e) => setHours(Number(e.target.value))} className="rounded-md border border-white/20 bg-[#0B1020] px-2 py-1">
+          <select value={hours} onChange={(e) => setHours(Number(e.target.value))} className="rounded-md border border-white/20 bg-[#0A0710] px-2 py-1">
             <option value={3}>3h</option>
             <option value={6}>6h</option>
             <option value={12}>12h</option>
@@ -62,7 +62,7 @@ export default function ReportCard({ confidence }: { confidence: number }) {
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
               <div className="text-3xl font-bold">
-                <span className="text-teal-300">{data.hits}/{data.daysScored}</span> days inside the crowd&apos;s {pct(data.confidence)} range
+                <span className="text-violet-300">{data.hits}/{data.daysScored}</span> days inside the crowd&apos;s {pct(data.confidence)} range
               </div>
               <div className="mt-1 text-sm text-slate-400">
                 Hit rate {pct(data.hitRate)} vs. {pct(data.confidence)} target · {data.calibration} · avg median error {usd(data.avgAbsMedianError)}
@@ -78,15 +78,15 @@ export default function ReportCard({ confidence }: { confidence: number }) {
                   <CartesianGrid stroke="#ffffff14" />
                   <XAxis dataKey="label" stroke="#94a3b8" fontSize={12} />
                   <YAxis domain={["dataMin - 500", "dataMax + 500"]} tickFormatter={(v) => `$${(v / 1000).toFixed(1)}k`} stroke="#94a3b8" fontSize={12} width={60} />
-                  <Tooltip contentStyle={{ background: "#0B1020", border: "1px solid #334155" }} formatter={(v: any, name: any) => [usd(Number(v)), name]} />
+                  <Tooltip contentStyle={{ background: "#0A0710", border: "1px solid #334155" }} formatter={(v: any, name: any) => [usd(Number(v)), name]} />
                   <Line dataKey="upper" name="Range top" stroke="#64748b" strokeDasharray="4 4" dot={false} isAnimationActive={false} />
-                  <Line dataKey="median" name="Crowd median" stroke="#2DD4BF" strokeWidth={2} isAnimationActive={false} />
-                  <Line dataKey="lower" name="Range bottom" stroke="#64748b" strokeDasharray="4 4" dot={false} isAnimationActive={false} />
+                  <Line dataKey="median" name="Crowd median" stroke="#A78BFA" strokeWidth={2} isAnimationActive={false} />
+                  <Line dataKey="lower" name="Range bottom" stroke="#060707ff" strokeDasharray="4 4" dot={false} isAnimationActive={false} />
                   <Line
                     dataKey="settlement" name="Actual settlement" stroke="transparent" isAnimationActive={false}
                     dot={(p: any) => (
                       <circle key={`s-${p.index}`} cx={p.cx} cy={p.cy} r={6}
-                        fill={p.payload.result === "inside" ? "#2DD4BF" : "#F87171"} stroke="#0B1020" strokeWidth={2} />
+                        fill={p.payload.result === "inside" ? "#A78BFA" : "#F87171"} stroke="#0A0710" strokeWidth={2} />
                     )}
                   />
                 </LineChart>
@@ -115,7 +115,7 @@ export default function ReportCard({ confidence }: { confidence: number }) {
                         <td className="py-2 pr-3">{usd(d.lower)} – {usd(d.upper)}</td>
                         <td className="py-2 pr-3">{usd(d.median)}</td>
                         <td className="py-2 pr-3">{usd(d.settlement)}</td>
-                        <td className={`py-2 pr-3 font-sans ${d.result === "inside" ? "text-teal-300" : "text-red-300"}`}>{resultText(d.result)}</td>
+                        <td className={`py-2 pr-3 font-sans ${d.result === "inside" ? "text-violet-300" : "text-red-300"}`}>{resultText(d.result)}</td>
                         <td className="py-2 font-sans text-slate-300">{d.hedgePaid ? `Paid (NO < ${usd(d.protectStrike)})` : "—"}</td>
                       </>
                     ) : (
