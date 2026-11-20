@@ -11,7 +11,7 @@ import {
 import ReportCard from "./ReportCard";
 import PixelGlasses from "./PixelGlasses";
 import { spreadPct, moodFor, MOOD_COLOR, MOOD_TEXT } from "./mood";
-import { useRange, usd, pct, clock, USE_MOCKS, MOCK_PROTECT, POLL_MS, MIN_GAP_MS, MAX_PER_HOUR } from "./RangeProvider";
+import { useRange, usd, pct, clock, USE_MOCKS, MOCK_PROTECT, POLL_MS, MIN_GAP_MS, MAX_PER_HOUR, HEDGE_BUDGET_PER_HOUR } from "./RangeProvider";
 
 // Purple / black palette
 const C = { accent: "#A78BFA", fill: "#8B5CF6", bg: "#0A0710", grid: "#ffffff14", axis: "#9CA3AF", muted: "#6B6480" };
@@ -238,16 +238,20 @@ function ActionButton({ children, onClick, busy, disabled }: { children: ReactNo
 }
 
 export function ActionsPanel() {
-  const { data, busy, shift, watch, onSetRange, onSimulateShift, onProtect, onReset } = useRange();
+  const { data, busy, shift, watch, onSetRange, onSimulateShift, onProtect, onReset, twoSided, setTwoSided } = useRange();
   return (
     <Card>
       <h3 className="mb-3 font-semibold">Actions</h3>
       <div className="flex flex-col gap-2">
         <ActionButton onClick={onSetRange} busy={busy === "set"} disabled={!!busy}>1 · Set range onchain</ActionButton>
         <ActionButton onClick={onSimulateShift} busy={busy === "shift"} disabled={!!busy || shift !== 0 || watch}>2 · Simulate odds shift (−$500)</ActionButton>
-        <ActionButton onClick={onProtect} busy={busy === "protect"} disabled={!!busy}>3 · Protect downside (Gemini sandbox)</ActionButton>
+        <ActionButton onClick={onProtect} busy={busy === "protect"} disabled={!!busy}>{twoSided ? "3 · Protect both sides (Gemini sandbox)" : "3 · Protect downside (Gemini sandbox)"}</ActionButton>
         {shift !== 0 && <button onClick={onReset} className="mt-1 text-xs text-slate-400 underline">Reset to live odds</button>}
       </div>
+      <label className="mt-3 flex items-center gap-2 text-sm text-slate-300">
+        <input type="checkbox" checked={twoSided} onChange={(e) => setTwoSided(e.target.checked)} className="accent-violet-500" />
+        Hedge both sides (add YES above the range)
+      </label>
       {watch && <p className="mt-2 text-xs text-slate-400">Simulate is disabled while Watch mode is on.</p>}
       {data && <p className="mt-3 text-xs text-slate-400">{data.protection.explain}</p>}
     </Card>
@@ -280,7 +284,7 @@ export function ActivityLog() {
 }
 
 export function WatchPanel() {
-  const { watch, threshold, setThreshold, recorded, autoTimes, lastCheck, busy, onToggleWatch, checkNow } = useRange();
+  const { watch, threshold, setThreshold, recorded, autoTimes, lastCheck, busy, onToggleWatch, checkNow, autoHedge, setAutoHedge, twoSided, setTwoSided, hedgeSpent } = useRange();
   return (
     <Card>
       <div className="mb-2 flex items-center justify-between">
@@ -301,10 +305,21 @@ export function WatchPanel() {
           <option value={0.3}>30% of range width</option>
         </select>
       </label>
+      <div className="mt-3 space-y-2 text-sm">
+        <label className="flex items-center gap-2 text-slate-300">
+          <input type="checkbox" checked={autoHedge} onChange={(e) => setAutoHedge(e.target.checked)} className="accent-violet-500" />
+          Auto re-hedge on Gemini after each auto-rebalance
+        </label>
+        <label className="flex items-center gap-2 text-slate-300">
+          <input type="checkbox" checked={twoSided} onChange={(e) => setTwoSided(e.target.checked)} className="accent-violet-500" />
+          Hedge both sides (add YES above the range)
+        </label>
+      </div>
       <ul className="mt-3 space-y-1 text-xs text-slate-400">
         <li>Recorded range: {recorded ? `${usd(recorded.lower)} – ${usd(recorded.upper)} (median ${usd(recorded.median)})` : <>none yet. <Link href="/actions" className="text-violet-300 underline">Set range first</Link></>}</li>
         <li>Guardrails: ≥{MIN_GAP_MS / 60_000} min between auto-rebalances · max {MAX_PER_HOUR}/hour</li>
         <li>Auto-rebalances this hour: {autoTimes.length}/{MAX_PER_HOUR}</li>
+        <li>Bot hedge spend: ${hedgeSpent.toFixed(2)} of ${HEDGE_BUDGET_PER_HOUR.toFixed(2)} per hour (sandbox)</li>
         {lastCheck && <li>Last check: {lastCheck}</li>}
       </ul>
       <button

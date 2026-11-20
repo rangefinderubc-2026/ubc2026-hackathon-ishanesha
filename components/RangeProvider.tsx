@@ -23,6 +23,7 @@ export const MOCK_PROTECT = process.env.NEXT_PUBLIC_MOCK_PROTECT === "true";
 export const SHIFT = -500;
 export const POLL_MS = 60_000;          // re-check Gemini every 60 s
 export const MIN_GAP_MS = 5 * 60_000;   // guardrail: ≥ 5 min between automatic rebalances
+export const HEDGE_BUDGET_PER_HOUR = 1; // guardrail: bot may spend ≤ $1.00 (sandbox) on hedges per hour
 export const MAX_PER_HOUR = 3;          // guardrail: ≤ 3 automatic rebalances per hour
 const MAX_SNAPS = 120;
 
@@ -61,6 +62,9 @@ type Ctx = {
   snaps: Snap[]; recorded: Recorded | null; watch: boolean;
   threshold: number; setThreshold: (n: number) => void;
   autoTimes: number[]; lastCheck: string | null;
+  autoHedge: boolean; setAutoHedge: (b: boolean) => void;
+  twoSided: boolean; setTwoSided: (b: boolean) => void;
+  hedgeSpent: number;
   reload: () => void; onSetRange: () => void; onSimulateShift: () => void; onProtect: () => void;
   onReset: () => void; onToggleWatch: () => void; checkNow: () => void;
 };
@@ -88,6 +92,9 @@ export default function RangeProvider({ children }: { children: ReactNode }) {
   const [threshold, setThreshold] = useState(0.2);
   const [autoTimes, setAutoTimes] = useState<number[]>([]);
   const [lastCheck, setLastCheck] = useState<string | null>(null);
+  const [autoHedge, setAutoHedge] = useState(true);
+  const [twoSided, setTwoSided] = useState(false);
+  const [hedgeSpend, setHedgeSpend] = useState<{ t: number; cost: number }[]>([]);
 
   const addLog = (e: Omit<LogEntry, "time">) => setLog((l) => [{ time: clock(), ...e }, ...l]);
   const addSnap = (d: CurveResp) =>
@@ -152,6 +159,49 @@ export default function RangeProvider({ children }: { children: ReactNode }) {
       detail: `${summary}. New range ${usd(live.lower)} – ${usd(live.upper)} · tx ${r.hash.slice(0, 10)}…`,
       url: r.url, mock: r.mock,
     });
+    if (autoHedge) {
+      try { await placeHedges(live, "auto"); }
+      catch (e: any) { addLog({ label: "Auto-hedge failed", detail: e.message }); }
+    }
+  }
+
+  type Leg = { side: "downside" | "upside"; outcome: "no" | "yes"; strike: number; price: number; label: string };
+
+  // Which Gemini contracts hedge the range: NO below it (always) and, optionally, YES above it
+  function hedgeLegs(d: CurveResp): Leg[] {
+    const p = d.protection;
+    const legs: Leg[] = [{
+      side: "downside", outcome: "no", strike: p.strike, price: p.noPrice ?? 0.05,
+      label: `NO on "BTC ≥ ${usd(p.strike)}" (pays if BTC finishes below it)`,
+    }];
+    if (twoSided && d.curve.length) {
+      const up = d.curve.find((c) => c.strike >= d.upper) ?? d.curve[d.curve.length - 1];
+      const strike = up.strike - d.shift;
+      const price = Math.min(0.99, Math.max(0.01, Math.round((up.pAbove + 0.01) * 100) / 100));
+      legs.push({ side: "upside", outcome: "yes", strike, price, label: `YES on "BTC ≥ ${usd(strike)}" (pays if BTC finishes above it)` });
+    }
+    return legs;
+  }
+
+  // Place hedge orders on Gemini's sandbox and record each one onchain.
+  // The bot ("auto") is limited by HEDGE_BUDGET_PER_HOUR; manual clicks are not.
+  async function placeHedges(d: CurveResp, source: "manual" | "auto") {
+    const now = Date.now();
+    const recent = hedgeSpend.filter((h) => now - h.t < 60 * 60_000);
+    let spent = recent.reduce((sum, h) => sum + h.cost, 0);
+    const added: { t: number; cost: number }[] = [];
+    for (const leg of hedgeLegs(d)) {
+      if (source === "auto" && spent + leg.price > HEDGE_BUDGET_PER_HOUR) {
+        addLog({ label: "Auto-hedge blocked (budget)", detail: `${leg.label} costs $${leg.price.toFixed(2)}; bot has spent $${spent.toFixed(2)} of its $${HEDGE_BUDGET_PER_HOUR.toFixed(2)}/hour hedge budget` });
+        continue;
+      }
+      const order = await postProtect({ strike: leg.strike, price: String(leg.price), quantity: "1", outcome: leg.outcome });
+      if (source === "auto") { spent += leg.price; added.push({ t: Date.now(), cost: leg.price }); }
+      addLog({ label: `${source === "auto" ? "Auto-hedge" : "Gemini sandbox order"} placed (${leg.side})`, detail: `Buy ${leg.label} @ $${leg.price.toFixed(2)} · order ${order.orderId} · ${order.symbol}`, mock: order.mock });
+      const r = await postOnchain({ action: "protect", orderId: order.orderId, strike: leg.strike, costCents: Math.round(leg.price * 100) });
+      addLog({ label: "Protection recorded onchain", detail: `Order ${order.orderId} · tx ${r.hash.slice(0, 10)}…`, url: r.url, mock: r.mock });
+    }
+    if (added.length) setHedgeSpend([...recent, ...added]);
   }
 
   async function poll(manual = false) {
@@ -209,12 +259,7 @@ export default function RangeProvider({ children }: { children: ReactNode }) {
 
   const onProtect = () => run("protect", async () => {
     if (!data) return;
-    const p = data.protection;
-    const price = p.noPrice ?? 0.05;
-    const order = await postProtect({ strike: p.strike, price: String(price), quantity: "1" });
-    addLog({ label: "Gemini sandbox order placed", detail: `Buy NO on "BTC ≥ ${usd(p.strike)}" @ $${price.toFixed(2)} · order ${order.orderId} · ${order.symbol}`, mock: order.mock });
-    const r = await postOnchain({ action: "protect", orderId: order.orderId, strike: p.strike, costCents: Math.round(price * 100) });
-    addLog({ label: "Protection recorded onchain", detail: `Order ${order.orderId} · tx ${r.hash.slice(0, 10)}…`, url: r.url, mock: r.mock });
+    await placeHedges(data, "manual");
   });
 
   const onReset = () => { setShift(0); setPrevCurve(null); };
@@ -231,6 +276,8 @@ export default function RangeProvider({ children }: { children: ReactNode }) {
   const value: Ctx = {
     confidence, setConfidence, shift, data, prevCurve, loading, busy, error, log,
     snaps, recorded, watch, threshold, setThreshold, autoTimes, lastCheck,
+    autoHedge, setAutoHedge, twoSided, setTwoSided,
+    hedgeSpent: hedgeSpend.reduce((sum, h) => sum + h.cost, 0),
     reload: () => load(confidence, shift),
     onSetRange, onSimulateShift, onProtect, onReset, onToggleWatch,
     checkNow: () => poll(true),
