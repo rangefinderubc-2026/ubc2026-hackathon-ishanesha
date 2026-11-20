@@ -147,6 +147,9 @@ Prices are whole US dollars; probabilities are basis points (7000 = 70%). All wr
 
 Next.js 16 (App Router, TypeScript) · Tailwind CSS · Recharts · viem · Solidity (RangeVault) · Base Sepolia · Gemini Prediction Markets API (public + sandbox) · Vercel
 
+## Use of AI tools
+We used AI assistants (Claude) throughout the hackathon, as the guide encourages: to brainstorm and compare project ideas, check the hackathon rules, draft and debug code (API routes, React components, curve math), and write documentation. Every feature was integrated, tested and verified by us against live Gemini data and real Base Sepolia transactions, and all product decisions (what to build, what to cut, how to present it honestly) were ours.
+
 ## Run it locally
 
 **Prerequisites:** Node 20+, a Base Sepolia wallet with test ETH, a Gemini **sandbox** account with an API key (Trader role) and the Prediction Markets terms accepted.
