@@ -1,3 +1,5 @@
+"use client";
+
 import { PageIntro, HowTo, DataGate, CurrentRange, TimelineChart, WatchPanel, ActivityLog } from "@/components/ui";
 
 export default function WatchPage() {

@@ -9,6 +9,8 @@ import {
   ReferenceArea, ReferenceLine, ResponsiveContainer,
 } from "recharts";
 import ReportCard from "./ReportCard";
+import PixelGlasses from "./PixelGlasses";
+import { spreadPct, moodFor, MOOD_COLOR, MOOD_TEXT } from "./mood";
 import { useRange, usd, pct, clock, USE_MOCKS, MOCK_PROTECT, POLL_MS, MIN_GAP_MS, MAX_PER_HOUR } from "./RangeProvider";
 
 // Purple / black palette
@@ -27,14 +29,22 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
   return <section className={`rounded-2xl border border-white/10 bg-[#151022] p-5 ${className}`}>{children}</section>;
 }
 
+function useMood() {
+  const { data } = useRange();
+  const mood = moodFor(spreadPct(data?.curve));
+  return { mood, color: MOOD_COLOR[mood], text: MOOD_TEXT[mood] };
+}
+
 export function Nav() {
   const path = usePathname();
   const { watch } = useRange();
+  const { color, text } = useMood();
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-[#0A0710]/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-4">
-        <Link href="/" className="text-xl font-semibold tracking-tight">
-          <span className="text-violet-400">Range</span>finder
+        <Link href="/" className="flex items-center gap-2 text-xl font-semibold tracking-tight">
+          <PixelGlasses size={30} glint={color} title={`Rangefinder. ${text}.`} />
+          <span><span className="text-violet-400">Range</span>finder</span>
         </Link>
         <nav className="flex flex-wrap gap-1 text-sm">
           {LINKS.map(([href, label]) => (
@@ -110,6 +120,7 @@ function SimBadge() {
 
 export function Headline() {
   const { data } = useRange();
+  const { color, text } = useMood();
   if (!data) return null;
   return (
     <section className="mb-6">
@@ -118,6 +129,10 @@ export function Headline() {
         <span className="text-violet-300">{pct(data.probInRange)}</span> chance BTC ends between{" "}
         <span className="font-mono">{usd(data.lower)}</span> and <span className="font-mono">{usd(data.upper)}</span>
       </h2>
+      <p className="mt-3 flex items-center gap-2 text-[13px] text-slate-400">
+        <PixelGlasses size={20} glint={color} title={`${text}.`} />
+        <span>{text}. The glint turns gold, amber or coral with the crowd&apos;s confidence.</span>
+      </p>
       <SimBadge />
     </section>
   );
