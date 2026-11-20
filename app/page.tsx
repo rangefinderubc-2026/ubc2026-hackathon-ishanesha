@@ -8,11 +8,11 @@ export default function ForecastPage() {
     <>
       <PageIntro eyebrow="Feature 1 · Forecast" title="See where the crowd thinks BTC will finish">
         <p>
-          Rangefinder reads Gemini&apos;s live BTC price ladder (about 20 contracts like &ldquo;BTC ≥ $62,000 at 4 PM&rdquo;) and turns
-          their prices into one probability curve. Each price is the crowd&apos;s probability, backed by real money.
+          Rangefinder reads Gemini&apos;s live BTC price ladder: a set of contracts like &ldquo;BTC ≥ $62,000 at 4 PM CT&rdquo;, one for each price level.
+          A contract&apos;s price works as the crowd&apos;s probability, backed by real money, and Rangefinder joins them into one curve.
         </p>
         <p>
-          From that curve it recommends the price range BTC is most likely to finish in, at the confidence you choose.
+          From that curve it builds a range centered on the crowd&apos;s median that BTC should finish inside with the confidence you choose.
           That&apos;s the range a Uniswap v3 liquidity provider would use to keep earning fees.
         </p>
       </PageIntro>
@@ -32,13 +32,13 @@ export default function ForecastPage() {
 
       <HowTo
         steps={[
-          <>Read the headline: it&apos;s the range BTC will most likely finish in at today&apos;s 4 PM CST settlement.</>,
-          <>Look at the chart: each dot is a real Gemini contract. The purple band is the recommended range, and the dashed line is the crowd&apos;s median (50/50 point).</>,
-          <>Drag the <b>Target confidence</b> slider: higher means a wider, safer range; lower means a narrower range that earns more fees but is more likely to be left.</>,
-          <>Check the stats: the chance BTC ends below or above the range, and what downside protection costs.</>,
+          <>Read the headline: the chance BTC finishes inside the recommended range at the next 4 PM CT settlement (shown above the headline).</>,
+          <>Look at the chart: each dot is a live Gemini contract and its implied chance of BTC finishing above that price. The shaded band is the recommended range; the dashed line is the crowd&apos;s median (the 50/50 point).</>,
+          <>Drag the <b>Target confidence</b> slider (50–90%): higher gives a wider, safer range; lower gives a narrower range that earns more fees while BTC stays inside but is more likely to be left.</>,
+          <>Check the stats: the crowd&apos;s median, the chance BTC ends below or above the range, and the price of one downside protection contract.</>,
           <>Happy with the range? Go to <b>Set &amp; Protect</b> to record it onchain.</>,
         ]}
-        note="Data refreshes every 60 seconds. If a ladder expires within 3 hours, the next day's ladder is used."
+        note="Live data refreshes every 60 seconds. When today's ladder settles in under 3 hours, Rangefinder switches to the next day's ladder, since odds that close to settlement are nearly all 0% or 100%."
       />
     </>
   );
